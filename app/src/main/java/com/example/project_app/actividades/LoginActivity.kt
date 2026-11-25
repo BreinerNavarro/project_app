@@ -9,12 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.project_app.R
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.project_app.modelos.DatosApp
 
 class LoginActivity : AppCompatActivity() {
-
-    // Credenciales de prueba (como pusiste inputType="textEmailAddress", usamos un correo)
-    private val correoValido = "test@test"
-    private val contrasenaValida = "1234"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,9 +78,9 @@ class LoginActivity : AppCompatActivity() {
         return true
     }
 
-    // Compara las credenciales (con parámetros y retorno Boolean)
+    // Función 2: Busca el usuario en DatosApp y lo deja guardado como estudianteActual
     private fun verificarCredenciales(usuario: String, contrasena: String): Boolean {
-        return usuario == correoValido && contrasena == contrasenaValida
+        return DatosApp.iniciarSesion(usuario, contrasena)
     }
 
     // Abre la Pantalla 2 y envía el dato del estudiante

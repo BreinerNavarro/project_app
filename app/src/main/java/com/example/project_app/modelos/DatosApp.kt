@@ -4,6 +4,8 @@ object DatosApp {
 
     // Encapsulamiento (private): lista mutable con los usuarios quemados
     private val listaEstudiantes = mutableListOf(
+        Estudiante("test", "test@test", "1234"),
+        Estudiante("Tawnee Soriano", "tawnee@correo.com", "1234"),
         Estudiante("Breiner Navarro", "breiner@correo.com", "1234"),
         Estudiante("Compañero Prueba", "companero@correo.com", "5678")
     )
