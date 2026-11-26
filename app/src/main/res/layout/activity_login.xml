@@ -65,5 +65,19 @@
             app:cornerRadius="24dp"
             app:rippleColor="#333B84F1" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/register_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:layout_marginTop="32dp"
+            android:padding="18dp"
+            android:text="registro"
+            android:textColor="#3B84F1"
+            android:textSize="20sp"
+            app:backgroundTint="@color/black"
+            app:cornerRadius="24dp"
+            app:rippleColor="#333B84F1" />
+
     </LinearLayout>
 </ScrollView>

@@ -29,7 +29,7 @@ class Estudiante(
         var totalCreditos = 0
 
         for (materia in materias) {
-            if (materia.notas.isNotEmpty()) {
+            if (materia.tieneNotas()) {
                 suma += materia.calcularDefinitiva() * materia.creditos
                 totalCreditos += materia.creditos
             }

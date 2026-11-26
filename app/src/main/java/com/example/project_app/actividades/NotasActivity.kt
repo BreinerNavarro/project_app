@@ -2,10 +2,8 @@ package com.example.project_app.actividades
 
 import android.os.Bundle
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -15,7 +13,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.project_app.R
 import com.example.project_app.modelos.DatosApp
 import com.example.project_app.modelos.Materia
-import com.example.project_app.modelos.Nota
 
 class NotasActivity : AppCompatActivity() {
 
@@ -26,8 +23,11 @@ class NotasActivity : AppCompatActivity() {
     private lateinit var tvDefinitivaMateria: TextView
     private lateinit var tvPorcentajeAcumulado: TextView
     private lateinit var tvEstadoMateria: TextView
-    private lateinit var tvSinNotas: TextView
-    private lateinit var lvNotas: ListView
+    private lateinit var tvProyeccion: TextView
+
+    private lateinit var etCorte1: EditText
+    private lateinit var etCorte2: EditText
+    private lateinit var etCorte3: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +36,6 @@ class NotasActivity : AppCompatActivity() {
 
         ajustarMargenes()
 
-        // 1. Recuperar la posición de la materia que se tocó en MateriasActivity
         val posicionMateria = intent.getIntExtra("POSICION_MATERIA", -1)
         val estudiante = DatosApp.estudianteActual
 
@@ -48,131 +47,101 @@ class NotasActivity : AppCompatActivity() {
 
         materiaActual = estudiante.materias[posicionMateria]
 
-        // 2. Enlazar vistas del XML
+        // Enlazar vistas
         tvTituloMateria = findViewById(R.id.tvTituloMateria)
         tvSubtituloMateria = findViewById(R.id.tvSubtituloMateria)
         tvDefinitivaMateria = findViewById(R.id.tvDefinitivaMateria)
         tvPorcentajeAcumulado = findViewById(R.id.tvPorcentajeAcumulado)
         tvEstadoMateria = findViewById(R.id.tvEstadoMateria)
-        tvSinNotas = findViewById(R.id.tvSinNotas)
-        lvNotas = findViewById(R.id.lvNotas)
+        tvProyeccion = findViewById(R.id.tvProyeccion)
+
+        etCorte1 = findViewById(R.id.etCorte1)
+        etCorte2 = findViewById(R.id.etCorte2)
+        etCorte3 = findViewById(R.id.etCorte3)
 
         val btnVolver = findViewById<Button>(R.id.btnVolver)
-        val etNombreNota = findViewById<EditText>(R.id.etNombreNota)
-        val etValorNota = findViewById<EditText>(R.id.etValorNota)
-        val etPorcentajeNota = findViewById<EditText>(R.id.etPorcentajeNota)
-        val btnAgregarNota = findViewById<Button>(R.id.btnAgregarNota)
+        val btnGuardarNotas = findViewById<Button>(R.id.btnGuardarNotas)
 
-        // 3. Botón Volver: regresa a MateriasActivity (donde se actualizará el promedio general)
-        btnVolver.setOnClickListener {
-            finish()
-        }
+        btnVolver.setOnClickListener { finish() }
+        btnGuardarNotas.setOnClickListener { guardarNotasCortes() }
 
-        // 4. Botón + Agregar Nota
-        btnAgregarNota.setOnClickListener {
-            agregarNuevaNota(etNombreNota, etValorNota, etPorcentajeNota)
-        }
-
-        // Mostrar los datos iniciales de la materia
-        actualizarPantalla()
+        cargarNotasGuardadas()
+        actualizarResumen()
     }
 
-    private fun agregarNuevaNota(
-        campoNombre: EditText,
-        campoValor: EditText,
-        campoPorcentaje: EditText
-    ) {
+    // Rellena las 3 cajas con las notas ya registradas para poder verlas o editarlas
+    private fun cargarNotasGuardadas() {
         val materia = materiaActual ?: return
 
-        val nombre = campoNombre.text?.toString()?.trim() ?: ""
-        val valorTexto = campoValor.text?.toString()?.trim() ?: ""
-        val porcentajeTexto = campoPorcentaje.text?.toString()?.trim() ?: ""
-
-        // Validar campos vacíos
-        if (nombre.isEmpty()) {
-            campoNombre.error = "Escribe la descripción (Ej: Parcial 1)"
-            campoNombre.requestFocus()
-            return
-        }
-        if (valorTexto.isEmpty()) {
-            campoValor.error = "Ingresa la nota"
-            campoValor.requestFocus()
-            return
-        }
-        if (porcentajeTexto.isEmpty()) {
-            campoPorcentaje.error = "Ingresa el porcentaje"
-            campoPorcentaje.requestFocus()
-            return
-        }
-
-        // Conversión segura de texto a decimal
-        val valor = valorTexto.toDoubleOrNull() ?: -1.0
-        val porcentaje = porcentajeTexto.toDoubleOrNull() ?: -1.0
-
-        // Validar rango de nota (0.0 a 5.0)
-        if (valor < 0.0 || valor > 5.0) {
-            campoValor.error = "La nota debe estar entre 0.0 y 5.0"
-            campoValor.requestFocus()
-            return
-        }
-
-        // Validar rango de porcentaje y que el acumulado no pase del 100%
-        val porcentajeAcumulado = calcularPorcentajeTotal(materia)
-        if (porcentaje <= 0.0 || porcentajeAcumulado + porcentaje > 100.0) {
-            val disponible = 100.0 - porcentajeAcumulado
-            campoPorcentaje.error = "Porcentaje inválido (disponible: ${String.format("%.0f", disponible)}%)"
-            campoPorcentaje.requestFocus()
-            return
-        }
-
-        // Agregar la nota a la lista mutable de la materia
-        val nuevaNota = Nota(nombre, valor, porcentaje)
-        materia.notas.add(nuevaNota)
-
-        // Limpiar las cajas de texto para registrar otra nota cómodamente
-        campoNombre.setText("")
-        campoValor.setText("")
-        campoPorcentaje.setText("")
-        campoNombre.requestFocus()
-
-        Toast.makeText(this, "Nota agregada", Toast.LENGTH_SHORT).show()
-        actualizarPantalla()
+        etCorte1.setText(materia.cortes[0].valor?.toString() ?: "")
+        etCorte2.setText(materia.cortes[1].valor?.toString() ?: "")
+        etCorte3.setText(materia.cortes[2].valor?.toString() ?: "")
     }
 
-    // Ciclo 'for' sencillo para sumar cuánto porcentaje lleva evaluado la materia
-    private fun calcularPorcentajeTotal(materia: Materia): Double {
-        var suma = 0.0
-        for (nota in materia.notas) {
-            suma += nota.porcentaje
+    // Valida cada caja (puede estar vacía o tener un número entre 0.0 y 5.0)
+    private fun leerNotaDeCampo(campo: EditText): Pair<Boolean, Double?> {
+        val texto = campo.text?.toString()?.trim() ?: ""
+
+        // Si se deja vacío, es válido (significa corte sin nota o nota borrada)
+        if (texto.isEmpty()) {
+            return Pair(true, null)
         }
-        return suma
+
+        val numero = texto.toDoubleOrNull()
+        if (numero == null || numero < 0.0 || numero > 5.0) {
+            campo.error = "Debe ser entre 0.0 y 5.0"
+            campo.requestFocus()
+            return Pair(false, null)
+        }
+
+        return Pair(true, numero)
     }
 
-    // Refresca la tarjeta azul y la lista inferior
-    private fun actualizarPantalla() {
+    private fun guardarNotasCortes() {
+        val materia = materiaActual ?: return
+
+        val (valido1, nota1) = leerNotaDeCampo(etCorte1)
+        if (!valido1) return
+
+        val (valido2, nota2) = leerNotaDeCampo(etCorte2)
+        if (!valido2) return
+
+        val (valido3, nota3) = leerNotaDeCampo(etCorte3)
+        if (!valido3) return
+
+        // Actualiza los 3 cortes en la lista mutable (sirve tanto para crear como para editar)
+        materia.cortes[0].valor = nota1
+        materia.cortes[1].valor = nota2
+        materia.cortes[2].valor = nota3
+
+        Toast.makeText(this, "Notas actualizadas", Toast.LENGTH_SHORT).show()
+        actualizarResumen()
+    }
+
+    private fun actualizarResumen() {
         val materia = materiaActual ?: return
 
         tvTituloMateria.text = materia.nombre
         tvSubtituloMateria.text = "Semestre ${materia.semestre} • ${materia.creditos} créditos"
-        tvDefinitivaMateria.text = String.format("%.1f", materia.calcularDefinitiva())
-
-        val evaluado = calcularPorcentajeTotal(materia)
-        tvPorcentajeAcumulado.text = "Evaluado: ${String.format("%.0f", evaluado)}%"
+        tvDefinitivaMateria.text = String.format("%.2f", materia.calcularDefinitiva())
         tvEstadoMateria.text = materia.obtenerEstado()
 
-        if (materia.notas.isEmpty()) {
-            tvSinNotas.visibility = View.VISIBLE
-            lvNotas.visibility = View.GONE
-        } else {
-            tvSinNotas.visibility = View.GONE
-            lvNotas.visibility = View.VISIBLE
-
-            val listaTextos = mutableListOf<String>()
-            for (nota in materia.notas) {
-                listaTextos.add("${nota.nombre}  —  Nota: ${nota.valor} (${nota.porcentaje}%)")
+        // Calcular porcentaje evaluado con ciclo 'for'
+        var evaluado = 0.0
+        for (corte in materia.cortes) {
+            if (corte.valor != null) {
+                evaluado += corte.porcentaje
             }
+        }
+        tvPorcentajeAcumulado.text = "Evaluado: ${String.format("%.0f", evaluado)}%"
 
-            lvNotas.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, listaTextos)
+        // Mostrar cuánto necesita en el Corte 3 para pasar en 3.0
+        val necesaria = materia.calcularNotaNecesariaCorte3()
+        tvProyeccion.text = when {
+            necesaria == null -> "Ingresa Corte 1 y Corte 2 para ver cuánto necesitas en el Corte 3."
+            necesaria <= 0.0 -> "¡Ya tienes aprobada la materia! Necesitas 0.0 en el Corte 3."
+            necesaria > 5.0 -> "Para pasar en 3.0 necesitas ${String.format("%.2f", necesaria)} en el Corte 3 (supera 5.0)."
+            else -> "Para pasar la materia en 3.0 necesitas mínimo: ${String.format("%.2f", necesaria)} en el Corte 3."
         }
     }
 
